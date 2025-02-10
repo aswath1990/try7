@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3x4 Puzzle Flip</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .puzzle-container {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 0;
+            border: none;
+        }
+        .tile {
+            width: 100px;
+            height: 100px;
+            perspective: 1000px;
+            position: relative;
+            visibility: hidden; /* Hide tiles initially but retain space */
+        }
+        .flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .tile.flipped .flip-card {
+            transform: rotateY(180deg);
+        }
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border: none;
+            margin: 0;
+        }
+        .back {
+            transform: rotateY(180deg);
+        }
+        #countdown {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        #downloadButton {
+            display: none;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="countdown">My Next Sweet Memory Will Show In: 0h 3m 0s</div>
+    <div class="puzzle-container" id="puzzleContainer"></div>
+    <button id="downloadButton" onclick="downloadImages()">Download Memories</button>
+
+    <script>
+        const rows = 3;
+        const cols = 4;
+        const frontImage = 'front.png';  // Replace with your front image
+        const backImage = 'back.png';    // Replace with your back image
+        const puzzleContainer = document.getElementById('puzzleContainer');
+        const countdownDisplay = document.getElementById('countdown');
+        const downloadButton = document.getElementById('downloadButton');
+
+        const UNLOCK_INTERVAL = 180; // 3 minutes in seconds
+        const unlockOrder = [4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11];
+        let unlockIndex = 0;
+
+        // Check for saved start time or set it
+        // Check for saved start time or set it
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${value};${expires};path=/`;
+}
+
+let startTime = localStorage.getItem('puzzleStartTime') || getCookie('puzzleStartTime');
+
+if (!startTime) {
+    startTime = new Date().getTime();
+    try {
+        localStorage.setItem('puzzleStartTime', startTime);
+    } catch (e) {
+        setCookie('puzzleStartTime', startTime, 30);
+    }
+} else {
+    startTime = parseInt(startTime);
+}
+        }
+
+        function updateCountdown() {
+            const currentTime = new Date().getTime();
+            const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
+
+            const totalUnlocks = Math.floor(elapsedSeconds / UNLOCK_INTERVAL);
+
+            // Unlock tiles based on elapsed time
+            while (unlockIndex < totalUnlocks && unlockIndex < unlockOrder.length) {
+                const nextTile = unlockOrder[unlockIndex];
+                document.querySelector(`.tile[data-index='${nextTile}']`).style.visibility = 'visible';
+                unlockIndex++;
+            }
+
+            if (unlockIndex >= unlockOrder.length) {
+                clearInterval(intervalId);
+                countdownDisplay.textContent = "All Memories Unlocked!";
+                downloadButton.style.display = 'block';
+                return;
+            }
+
+            const countdown = UNLOCK_INTERVAL - (elapsedSeconds % UNLOCK_INTERVAL);
+            const hours = Math.floor(countdown / 3600);
+const minutes = Math.floor((countdown % 3600) / 60);
+const seconds = countdown % 60;
+countdownDisplay.textContent = `My Next Sweet Memory Will Show In: ${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        const intervalId = setInterval(updateCountdown, 1000);
+
+        for (let i = 0; i < rows * cols; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.dataset.index = i;
+
+            if (i === 0 || i === 4) {
+    tile.style.visibility = 'visible';
+}
+
+            const flipCard = document.createElement('div');
+            flipCard.className = 'flip-card';
+
+            const front = document.createElement('div');
+            front.className = 'front';
+            front.style.backgroundImage = `url(${frontImage})`;
+            front.style.backgroundSize = `${cols * 100}px ${rows * 100}px`;
+            front.style.backgroundPosition = `-${(i % cols) * 100}px -${Math.floor(i / cols) * 100}px`;
+
+            const back = document.createElement('div');
+            back.className = 'back';
+            back.style.backgroundImage = `url(${backImage})`;
+            back.style.backgroundSize = `${cols * 100}px ${rows * 100}px`;
+            back.style.backgroundPosition = `-${(i % cols) * 100}px -${Math.floor(i / cols) * 100}px`;
+
+            flipCard.appendChild(front);
+            flipCard.appendChild(back);
+            tile.appendChild(flipCard);
+
+            tile.addEventListener('click', () => {
+                tile.classList.toggle('flipped');
+            });
+
+            puzzleContainer.appendChild(tile);
+        }
+
+        function downloadImages() {
+            const link1 = document.createElement('a');
+            link1.href = frontImage;
+            link1.download = 'front.png';
+            link1.click();
+
+            const link2 = document.createElement('a');
+            link2.href = backImage;
+            link2.download = 'back.png';
+            link2.click();
+        }
+    </script>
+</body>
+</html>
