@@ -13,7 +13,7 @@
             height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
-
+        }
         .puzzle-container {
             display: grid;
             grid-template-columns: repeat(4, 100px);
@@ -81,46 +81,22 @@
         const downloadButton = document.getElementById('downloadButton');
 
         const UNLOCK_INTERVAL = 180; // 3 minutes in seconds
-        const unlockOrder = [4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11];
+        const unlockOrder = [8, 1, 5, 9, 2, 6, 10, 3, 7, 11];
         let unlockIndex = 0;
 
-        // Check for saved start time or set it
-        // Check for saved start time or set it
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
-
-function setCookie(name, value, days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    const expires = `expires=${date.toUTCString()}`;
-    document.cookie = `${name}=${value};${expires};path=/`;
-}
-
-let startTime = localStorage.getItem('puzzleStartTime') || getCookie('puzzleStartTime');
-
-if (!startTime) {
-    startTime = new Date().getTime();
-    try {
-        localStorage.setItem('puzzleStartTime', startTime);
-    } catch (e) {
-        setCookie('puzzleStartTime', startTime, 30);
-    }
-} else {
-    startTime = parseInt(startTime);
-}
+        let startTime = localStorage.getItem('puzzleStartTime');
+        if (!startTime) {
+            startTime = new Date().getTime();
+            localStorage.setItem('puzzleStartTime', startTime);
+        } else {
+            startTime = parseInt(startTime);
         }
 
         function updateCountdown() {
             const currentTime = new Date().getTime();
             const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
 
-            const totalUnlocks = Math.floor(elapsedSeconds / UNLOCK_INTERVAL);
-
-            // Unlock tiles based on elapsed time
-            while (unlockIndex < totalUnlocks && unlockIndex < unlockOrder.length) {
+            if (elapsedSeconds >= (unlockIndex + 1) * UNLOCK_INTERVAL && unlockIndex < unlockOrder.length) {
                 const nextTile = unlockOrder[unlockIndex];
                 document.querySelector(`.tile[data-index='${nextTile}']`).style.visibility = 'visible';
                 unlockIndex++;
@@ -133,11 +109,12 @@ if (!startTime) {
                 return;
             }
 
-            const countdown = UNLOCK_INTERVAL - (elapsedSeconds % UNLOCK_INTERVAL);
+            const timeSinceLastUnlock = elapsedSeconds % UNLOCK_INTERVAL;
+            const countdown = UNLOCK_INTERVAL - timeSinceLastUnlock;
             const hours = Math.floor(countdown / 3600);
-const minutes = Math.floor((countdown % 3600) / 60);
-const seconds = countdown % 60;
-countdownDisplay.textContent = `My Next Sweet Memory Will Show In: ${hours}h ${minutes}m ${seconds}s`;
+            const minutes = Math.floor((countdown % 3600) / 60);
+            const seconds = countdown % 60;
+            countdownDisplay.textContent = `My Next Sweet Memory Will Show In: ${hours}h ${minutes}m ${seconds}s`;
         }
 
         const intervalId = setInterval(updateCountdown, 1000);
@@ -148,8 +125,8 @@ countdownDisplay.textContent = `My Next Sweet Memory Will Show In: ${hours}h ${m
             tile.dataset.index = i;
 
             if (i === 0 || i === 4) {
-    tile.style.visibility = 'visible';
-}
+                tile.style.visibility = 'visible';
+            }
 
             const flipCard = document.createElement('div');
             flipCard.className = 'flip-card';
